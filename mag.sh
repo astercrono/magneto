@@ -46,14 +46,6 @@ function cmd_init {
         [[ "$?" == 0 ]] && did_something="1"
     fi
 
-    if is_mounted; then
-        fancy_println "bold" "yellow" "Vault already mounted"
-    else
-        fancy_println "bold" "green" "Mounting Vault"
-        crypt_open
-        [[ "$?" == 0 ]] && did_something="1"
-    fi
-
     if [ -d "$git_path" ]; then
         fancy_println "bold" "yellow" "Repository already configured"
     else
@@ -75,8 +67,6 @@ function cmd_open {
     else
         fancy_println "bold" "green" "Mounting Vault"
         crypt_open
-
-        echo ""
         fancy_println "bold" "Done"
     fi
 }
@@ -85,8 +75,6 @@ function cmd_close {
     if is_mounted; then
         fancy_println "bold" "green" "Closing Vault"
         crypt_close
-
-        echo ""
         fancy_println "bold" "Done"
     else
         fancy_println "bold" "yellow" "Vault already closed"
@@ -104,4 +92,34 @@ function cmd_install {
     done
 }
 
-cmd_$cmd
+function cmd_wipe {
+    if is_mounted; then
+        fancy_println "bold" "green" "Closing Vault"
+        crypt_close
+    fi
+
+    if [ -d "$data_path" ]; then
+        fancy_println "bold" "yellow" "Wiping data store"
+        rm -fr $data_path
+    fi
+
+    fancy_println "bold" "Done"
+}
+
+function cmd_list {
+    plain_list
+}
+
+function cmd_search {
+    plain_search $1
+}
+
+function cmd_update {
+    pushd .
+    cd "$project_path" && git pull
+    popd
+}
+
+read_config
+shift
+cmd_$cmd $@

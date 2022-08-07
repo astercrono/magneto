@@ -3,26 +3,69 @@ declare -A command_definition=(
     ["init"]="           -- :Initialize encrypted filesystem" 
     ["open"]="           -- :Mount encrypted filesystem"
     ["close"]="          -- :Unmount encrypted filesystem"
-    ["install"]="        -- :Install mag executable to system PATH (todo)"
-    ["list"]="           -- :List decrypted files (todo)"
-    ["search"]="         -- :Search decrypted files by GLOB (todo)"
-    ["update"]="         -- :Pull down the latest Magneto changes (todo)"
+    ["install"]="        -- :Install mag executable to system"
+    ["list"]="           -- :List decrypted files"
+    ["search"]="         -- :Search decrypted files by name"
+    ["update"]="         -- :Pull down the latest Magneto changes"
+    ["wipe"]="           -- :Completely erase your encrypted data store."
 )
 
 command_list=()
 
-data_dir="data"
 crypt_dir="vault"
 plain_dir="plain"
 
-data_path="$project_path/$data_dir"
-crypt_path="$data_path/$crypt_dir"
-plain_path="$data_path/$plain_dir"
-git_path="$data_path/.git"
+config_path="$project_path/mag.conf"
+
+data_path=""
+crypt_path=""
+plain_path=""
+git_path=""
 
 for c in ${!command_definition[@]}; do
     command_list+=($c)
 done
+
+function read_config {
+    if [ -f "$config_path" ]; then
+        source "$config_path"
+        
+        if [[ "$MAG_DATA" != "" ]]; then 
+            data_path="$(resolve_data_path $MAG_DATA)"
+            check_path "$data_path" "Invalid MAG_DATA in mag.conf"
+
+            crypt_path="$data_path/$crypt_dir"
+            check_path "$data_path" "Cannot resolve crypt path from mag.conf. Is your MAG_DATA a valid path?"
+
+            plain_path="$data_path/$plain_dir"
+            check_path "$data_path" "Cannot resolve plain path from mag.conf. Is your MAG_DATA a valid path?"
+
+            git_path="$data_path/.git"
+        else
+            fancy_println "bold" "red" "Invalid mag.conf"
+            fancy_println "bold" "yellow" "Missing MAG_DATA_PATH"
+        fi
+    fi
+}
+
+function resolve_data_path {
+    d=$1
+
+    if [[ "$d" == /* ]]; then
+        echo "$d"
+    else
+        echo "$project_path/$d"
+    fi
+}
+
+function check_path {
+    msg="$2"
+    pathchk $1 > /dev/null 2>&1
+    if [[ "$?" != 0 ]]; then
+        fancy_println "bold" "red" "$msg"
+        exit 1
+    fi
+}
 
 function print_help {
     fancy_print "bold" "cyan" "Usage: "
@@ -96,10 +139,10 @@ function crypt_close {
 function git_init {
     cd "$data_path"
 
-    echo "bin/**/gocrypt*" >> .gitignore
+    echo "$crypt_dir/gocryptfs.conf" >> .gitignore
     echo "plain" >> .gitignore
 
-    git init | grep -v "hint" | sed 's|^Init|    - Init|'
+    git init 2>/dev/null | grep -v "hint" | sed 's|^Init|    - Init|'
 
     cd "$project_path"
 
@@ -124,6 +167,21 @@ function run_gocryptfs {
 	if [ -f "$local_gocrypt" ]; then
 		$local_gocrypt $@
 	else
-		gocryptfs $@
+		gocryptfs $@ 
 	fi
+}
+
+function plain_list {
+    find "$plain_path" -type f | sed -e "s|^$project_path||" | ctree
+}
+
+function plain_search {
+    # echo "$1"
+    # echo "$plain_path"
+    find "$plain_path" -name "*$1*" 2>/dev/null | sed -e "s|^$project_path||" | ctree
+    # find "$plain_path" -type f | grep "$1"
+}
+
+function ctree {
+    $project_path/lib/ctree/ctree_linux_amd64
 }
