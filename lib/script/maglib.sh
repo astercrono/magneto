@@ -5,6 +5,7 @@ declare -A command_definition=(
     ["close"]="          -- :Unmount encrypted filesystem"
     ["install"]="        -- :Install mag executable to system"
     ["list"]="           -- :List decrypted files"
+    ["tree"]="           -- :List decrypted files in tree format"
     ["search"]="         -- :Search decrypted files by name"
     ["update"]="         -- :Pull down the latest Magneto changes"
     ["wipe"]="           -- :Completely erase your encrypted data store."

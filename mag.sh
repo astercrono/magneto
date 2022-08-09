@@ -8,10 +8,15 @@ function prereq_check {
     missing=()
 
     for pr in ${prereq_list[@]}; do
-        $(command -v "$pr" > /dev/null 2>&1)
-        if [[ "$?" != 0 ]] && [ ! -f "$pr" ]; then
-			missing+=("$pr")
-			missing_something="1"
+        if [ ! -f "$project_path/$pr" ]; then
+            missing+=("$pr")
+            missing_something="1"
+        else
+            $(command -v "$pr" > /dev/null 2>&1)
+            if [[ "$?" != 0 ]] && [ ! -f "$pr" ]; then
+                missing+=("$pr")
+                missing_something="1"
+            fi
         fi
     done
 
@@ -111,7 +116,20 @@ function cmd_list {
 }
 
 function cmd_search {
-    plain_search $1
+    exp="$1"
+
+    if [[ "$exp" == "" ]]; then
+        fancy_println "bold" "red" "Missing argument: <name>"
+        echo ""
+        fancy_print "bold" "cyan" "Usage: "
+        echo "mag search <name>"
+        echo ""
+        fancy_print "bold" "<name>"
+        echo ": File name substring to search for"
+        exit 1
+    fi
+
+    plain_search "$exp"
 }
 
 function cmd_update {
