@@ -177,10 +177,8 @@ function plain_list {
 }
 
 function plain_search {
-    # echo "$1"
-    # echo "$plain_path"
-    find "$plain_path" -name "*$1*" 2>/dev/null | sed -e "s|^$project_path||" | ctree
-    # find "$plain_path" -type f | grep "$1"
+    search_name="$1"
+    find "$plain_path" -type f 2>/dev/null | grep -i "$search_name" | sed -e "s|^$project_path||" | ctree
 }
 
 function ctree {
