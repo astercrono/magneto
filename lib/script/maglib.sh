@@ -184,5 +184,6 @@ function plain_search {
 }
 
 function ctree {
+    chmod +x $project_path/lib/ctree/ctree_linux_amd64
     $project_path/lib/ctree/ctree_linux_amd64
 }
