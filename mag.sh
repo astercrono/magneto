@@ -8,12 +8,14 @@ function prereq_check {
     missing=()
 
     for pr in ${prereq_list[@]}; do
-        if [ ! -f "$project_path/$pr" ]; then
+        $(command -v "$pr" > /dev/null 2>&1)
+        on_system="$?"
+
+        if [ ! -f "$project_path/$pr" ] && [[ "$on_system" != 0 ]]; then
             missing+=("$pr")
             missing_something="1"
         else
-            $(command -v "$pr" > /dev/null 2>&1)
-            if [[ "$?" != 0 ]] && [ ! -f "$pr" ]; then
+            if [[ "$on_system" != 0 ]] && [ ! -f "$pr" ]; then
                 missing+=("$pr")
                 missing_something="1"
             fi
