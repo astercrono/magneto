@@ -89,12 +89,14 @@ function cmd_close {
 }
 
 function cmd_install {
-    alias_line="alias mag='$project_path/mag.sh'"
+    mag_path_line="export MAGPATH=$project_path"
+    path_line="PATH=\$MAGPATH:\$PATH"
     targets=("$HOME/.zshrc" "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.profile")
 
     for t in ${targets[@]}; do
         if [ -f $t ]; then 
-            echo "$alias_line" >> "$t"
+            echo "$mag_path_line" >> "$t"
+            echo "$path_line" >> "$t"
         fi
     done
 }
