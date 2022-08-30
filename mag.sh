@@ -102,8 +102,15 @@ function cmd_wipe {
     fi
 
     if [ -d "$data_path" ]; then
-        fancy_println "bold" "yellow" "Wiping data store"
-        rm -fr $data_path
+        read -p "Re-enter vaule name: " entered_vault
+
+        if [[ "$VAULT_NAME" == "$entered_vault" ]]; then
+            fancy_println "bold" "yellow" "Wiping data store"
+            rm -fr $data_path
+        else
+            fancy_println "bold" "Invalid Vault Name"
+            exit 1
+        fi
     fi
 
     fancy_println "bold" "Done"
@@ -175,6 +182,7 @@ if [[ "$cmd" != "vaults" ]]; then
     echo ""
 fi
 
+VAULT_NAME="$MAG_DATA"
 MAG_DATA="data/$MAG_DATA"
 set_mag_paths
 cmd_"$cmd" "$@"
