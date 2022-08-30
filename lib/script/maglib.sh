@@ -8,6 +8,7 @@ declare -A command_definition=(
     ["tree"]="           -- :List decrypted files in tree format"
     ["search"]="         -- :Search decrypted files by name"
     ["update"]="         -- :Pull down the latest Magneto changes"
+    ["vaults"]="         -- :List available vaults"
     ["wipe"]="           -- :Completely erase your encrypted data store."
 )
 
@@ -16,36 +17,29 @@ command_list=()
 crypt_dir="vault"
 plain_dir="plain"
 
-config_path="$project_path/mag.conf"
-
 data_path=""
 crypt_path=""
 plain_path=""
 git_path=""
 
-for c in ${!command_definition[@]}; do
+for c in "${!command_definition[@]}"; do
     command_list+=($c)
 done
 
-function read_config {
-    if [ -f "$config_path" ]; then
-        source "$config_path"
-        
-        if [[ "$MAG_DATA" != "" ]]; then 
-            data_path="$(resolve_data_path $MAG_DATA)"
-            check_path "$data_path" "Invalid MAG_DATA in mag.conf"
+function set_mag_paths {
+    if [[ "$MAG_DATA" != "" ]]; then
+        data_path="$(resolve_data_path $MAG_DATA)"
+        check_path "$data_path" "Invalid MAG_DATA"
 
-            crypt_path="$data_path/$crypt_dir"
-            check_path "$data_path" "Cannot resolve crypt path from mag.conf. Is your MAG_DATA a valid path?"
+        crypt_path="$data_path/$crypt_dir"
+        check_path "$data_path" "Cannot resolve crypt path. Is your MAG_DATA a valid path?"
 
-            plain_path="$data_path/$plain_dir"
-            check_path "$data_path" "Cannot resolve plain path from mag.conf. Is your MAG_DATA a valid path?"
+        plain_path="$data_path/$plain_dir"
+        check_path "$data_path" "Cannot resolve plain path. Is your MAG_DATA a valid path?"
 
-            git_path="$data_path/.git"
-        else
-            fancy_println "bold" "red" "Invalid mag.conf"
-            fancy_println "bold" "yellow" "Missing MAG_DATA_PATH"
-        fi
+        git_path="$data_path/.git"
+    else
+        fancy_println "bold" "red" "Invalid MAG_DATA"
     fi
 }
 
@@ -70,11 +64,19 @@ function check_path {
 
 function print_help {
     fancy_print "bold" "cyan" "Usage: "
-    echo "mag <command>"
+    echo "mag [vault] <command>"
+    echo ""
+    fancy_println "bold" "green" "Arguments: "
+    fancy_print "bold" "    - vault"
+    fancy_print "normal" "          -- (optional) Name of vault to operate on. "
+    fancy_print "bold" "Default"
+    echo ": main"
+    fancy_print "bold" "    - command"
+    echo "        -- Action to perform"
     echo ""
     fancy_println "bold" "green" "Commands: "
 
-    for c in ${command_list[@]}; do
+    for c in "${command_list[@]}"; do
         desc=$(command_description "$c" "full")
         fancy_print "bold" "    - $c"
         echo "$desc"
@@ -98,14 +100,14 @@ function command_description {
 
 function check_command {
     cmd="$1"
-    for c in ${command_list[@]}; do
+    for c in "${command_list[@]}"; do
         [[ "$c" == "$cmd" ]] && return 0
     done
     return 1
 }
 
-function invalid_command {
-    fancy_println "bold" "red" "Invalid Command: $1"
+function invalid_args {
+    fancy_println "bold" "red" "Invalid Arguments"
     echo ""
     print_help
 }
@@ -166,9 +168,9 @@ function run_gocryptfs {
 	local_gocrypt="$project_path/gocryptfs"
 
 	if [ -f "$local_gocrypt" ]; then
-		$local_gocrypt $@
+		$local_gocrypt "$@"
 	else
-		gocryptfs $@ 
+		gocryptfs "$@"
 	fi
 }
 
@@ -182,6 +184,7 @@ function plain_search {
 }
 
 function ctree {
+    # TODO - Select platform and arch specific ctree
     chmod +x $project_path/lib/ctree/ctree_linux_amd64
     $project_path/lib/ctree/ctree_linux_amd64
 }

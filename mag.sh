@@ -7,8 +7,8 @@ function prereq_check {
     missing_something=""
     missing=()
 
-    for pr in ${prereq_list[@]}; do
-        $(command -v "$pr" > /dev/null 2>&1)
+    for pr in "${prereq_list[@]}"; do
+        command -v "$pr" >/dev/null 2>&1
         on_system="$?"
 
         if [ ! -f "$project_path/$pr" ] && [[ "$on_system" != 0 ]]; then
@@ -24,7 +24,7 @@ function prereq_check {
 
     if [[ "$missing_something" == "1" ]]; then
         fancy_println "bold" "red" "Missing required dependencies: "
-        for d in ${missing[@]}; do
+        for d in "${missing[@]}"; do
             echo "    - $d"
         done
         exit 1
@@ -35,12 +35,6 @@ source "$project_path/lib/script/fancy.sh"
 source "$project_path/lib/script/maglib.sh"
 
 prereq_check
-cmd="$1"
-
-[[ "$cmd" == "" ]] && print_help && exit 1
-
-check_command "$cmd"
-[[ "$?" == 1 ]] && invalid_command "$cmd" && exit 1
 
 function cmd_init {
     did_something=""
@@ -58,7 +52,7 @@ function cmd_init {
     else
         fancy_println "bold" "cyan" "Configuring Git: "
         mkdir -p "$data_path"
-        git_init         
+        git_init
         [[ "$?" == 0 ]] && did_something="1"
     fi
 
@@ -93,10 +87,10 @@ function cmd_install {
     path_line="PATH=\$MAGPATH:\$PATH"
     targets=("$HOME/.zshrc" "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.profile")
 
-    for t in ${targets[@]}; do
-        if [ -f $t ]; then 
-            echo "$mag_path_line" >> "$t"
-            echo "$path_line" >> "$t"
+    for t in "${targets[@]}"; do
+        if [ -f $t ]; then
+            echo "$mag_path_line" >>"$t"
+            echo "$path_line" >>"$t"
         fi
     done
 }
@@ -142,6 +136,45 @@ function cmd_update {
     popd
 }
 
-read_config
-shift
-cmd_$cmd $@
+function cmd_vaults {
+    if [ ! -d "$project_path/data" ]; then
+        fancy_println "bold" "yellow" "Data directory missing"
+    else
+        ls "$project_path/data"
+    fi
+}
+
+first_arg="$1"
+second_arg="$2"
+
+[[ "$first_arg" == "" ]] && print_help && exit 1
+
+check_command "$first_arg"
+is_command="$?"
+
+if [[ "$is_command" == 0 ]]; then
+    MAG_DATA="main"
+    cmd="$first_arg"
+    shift
+else
+    check_command "$second_arg"
+    is_command="$?"
+
+    if [[ "$is_command" == 0 ]]; then
+        MAG_DATA="$first_arg"
+        cmd="$second_arg"
+        shift
+    fi
+fi
+
+[[ "$MAG_DATA" == "" ]] && invalid_args "$cmd" && exit 1
+
+if [[ "$cmd" != "vaults" ]]; then
+    fancy_print "bold" "magenta" "Target Vault: "
+    echo "$MAG_DATA"
+    echo ""
+fi
+
+MAG_DATA="data/$MAG_DATA"
+set_mag_paths
+cmd_"$cmd" "$@"
