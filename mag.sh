@@ -137,10 +137,122 @@ function cmd_search {
     plain_search "$exp"
 }
 
-function cmd_update {
+function cmd_pull {
     pushd .
-    cd "$project_path" && git pull
+
+    cd "$project_path/$MAG_DATA"
+    [[ "$?" != 0 ]] && fancy_println "bold" "red" "Invalid vault path" && exit 1
+
+    current_branch="$(git rev-parse --abbrev-ref HEAD)"
+    [[ "$?" != 0 ]] && fancy_println "bold" "red" "Invalid repo. Could not determine branch." && exit 1
+
+    git fetch && \
+    git merge "origin/$current_branch"
+
+    [[ "$?" != 0 ]] && fancy_println "bold" "red" "Unable to pull changes from remote" && exit 1
+
     popd
+}
+
+function cmd_push {
+    pushd .
+
+    cd "$project_path/$MAG_DATA"
+    [[ "$?" != 0 ]] && fancy_println "bold" "red" "Invalid vault path" && exit 1
+
+    current_branch="$(git rev-parse --abbrev-ref HEAD)"
+    [[ "$?" != 0 ]] && fancy_println "bold" "red" "Invalid repo. Could not determine branch." && exit 1
+
+    git fetch && \
+    git merge "origin/$current_branch" && \
+    git push origin "$current_branch"
+
+    [[ "$?" != 0 ]] && fancy_println "bold" "red" "Unable to push to remote" && exit 1
+
+    popd
+}
+
+function cmd_commit {
+    pushd .
+
+    cd "$project_path/$MAG_DATA"
+    [[ "$?" != 0 ]] && fancy_println "bold" "red" "Invalid vault path" && exit 1
+
+    git add . && \
+    git commit
+
+    [[ "$?" != 0 ]] && fancy_println "bold" "red" "Unable to commit" && exit 1
+
+    popd
+}
+
+function cmd_auto_commit {
+    pushd . >/dev/null
+
+    cd "$project_path/$MAG_DATA"
+    [[ "$?" != 0 ]] && fancy_println "bold" "red" "Invalid vault path" && exit 1
+
+    current_branch="$(git rev-parse --abbrev-ref HEAD)"
+    [[ "$?" != 0 ]] && fancy_println "bold" "red" "Invalid repo. Could not determine branch." && exit 1
+
+    git add . && \
+    git commit -m "Update vault data"
+
+    [[ "$?" != 0 ]] && fancy_println "bold" "red" "Unable to auto-commit" && exit 1
+
+    popd >/dev/null
+}
+
+function cmd_sync {
+    pushd . >/dev/null
+
+    cd "$project_path/$MAG_DATA"
+    [[ "$?" != 0 ]] && fancy_println "bold" "red" "Invalid vault path" && exit 1
+
+    current_branch="$(git rev-parse --abbrev-ref HEAD)"
+    [[ "$?" != 0 ]] && fancy_println "bold" "red" "Invalid repo. Could not determine branch." && exit 1
+
+    git fetch && \
+    git merge "origin/$current_branch" && \
+    git add . && \
+    git commit -m "Update vault data" && \
+    git push origin "$current_branch"
+
+    [[ "$?" != 0 ]] && fancy_println "bold" "red" "Unable to sync with remote" && exit 1
+
+    popd >/dev/null
+}
+
+function cmd_remote {
+    url="$1"
+
+    if [[ "$url" == "" ]]; then
+        fancy_println "bold" "red" "Missing argument: <url>"
+        echo ""
+        fancy_print "bold" "cyan" "Usage: "
+        echo "mag [vault] remote <url>"
+        echo ""
+        fancy_print "bold" "<name>"
+        echo ": URL to add as origin"
+        exit 1
+    fi
+
+    pushd . >/dev/null
+
+    cd "$project_path/$MAG_DATA"
+    [[ "$?" != 0 ]] && fancy_println "bold" "red" "Invalid vault path" && exit 1
+
+    if [[ "$(git remote)" == "" ]]; then
+        echo "adding"
+        git remote add origin "$url"
+    else
+        echo "setting"
+        git remote set-url origin "$url"
+    fi
+
+    [[ "$?" != 0 ]] && fancy_println "bold" "red" "Unable to change remote" && exit 1
+
+    popd >/dev/null
 }
 
 function cmd_vaults {
