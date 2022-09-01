@@ -283,6 +283,7 @@ else
         MAG_DATA="$first_arg"
         cmd="$second_arg"
         shift
+        shift
     fi
 fi
 
