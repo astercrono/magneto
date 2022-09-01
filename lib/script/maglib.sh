@@ -188,9 +188,3 @@ function plain_search {
     search_name="$1"
     find "$plain_path" -type f 2>/dev/null | grep -i "$search_name" | sed -e "s|^$project_path||" | ctree
 }
-
-function ctree {
-    # TODO - Select platform and arch specific ctree
-    chmod +x $project_path/lib/ctree/ctree_linux_amd64
-    $project_path/lib/ctree/ctree_linux_amd64
-}

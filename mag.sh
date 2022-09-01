@@ -1,7 +1,7 @@
 #!/bin/bash
 
 project_path=$(cd $(dirname $(realpath $0)) && pwd)
-prereq_list=("gocryptfs" "git" "fusermount")
+prereq_list=("gocryptfs" "git" "fusermount" "ctree")
 
 function prereq_check {
     missing_something=""
