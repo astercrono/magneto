@@ -23,8 +23,7 @@ Use Magneto to manage multiple distinct, version-tracked, encrypted filesystems.
 
 ### Install to PATH
 
-`cd magneto` &&
-`./mag.sh install`
+`cd magneto` && ./mag.sh install`
 
 ## Usage
 
