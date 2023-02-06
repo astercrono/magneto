@@ -17,8 +17,6 @@ Use Magneto to manage multiple distinct, version-tracked, encrypted filesystems.
  - fuse, fusermount
  - [ctree](https://github.com/astercrono/crono-tools)
 
-For CTree, grab the latest available executable for your system and add it to your path.
-
 ### Clone Repository
 
 `git clone https://gitlab.com/cronolabs/magneto.git`
